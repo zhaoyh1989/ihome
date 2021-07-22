@@ -21,4 +21,18 @@ func init() {
 	beego.Router("/api/v1.0/sessions", &controllers.UserController{}, "post:Login")
 	// http://localhost/api/v1.0/user/avatar
 	beego.Router("/api/v1.0/user/avatar", &controllers.UserController{}, "post:Postavatar")
+	// http://localhost/api/v1.0/user
+	beego.Router("/api/v1.0/user", &controllers.UserController{}, "get:GetUser")
+	// http://localhost/api/v1.0/user/name
+	beego.Router("/api/v1.0/user/name", &controllers.UserController{}, "put:UpName")
+	// http://localhost/api/v1.0/user/auth
+	beego.Router("/api/v1.0/user/auth", &controllers.UserController{}, "get:GetUser;post:PostAuth")
+	// http://localhost/api/v1.0/user/houses
+	beego.Router("/api/v1.0/user/houses", &controllers.HouseController{}, "get:GetHouse")
+	// http://localhost/api/v1.0/houses
+	beego.Router("/api/v1.0/houses", &controllers.HouseController{}, "post:PostHouse")
+	// http://localhost/api/v1.0/houses/7/images
+	beego.Router("/api/v1.0/houses/?:houseid/images", &controllers.HouseController{}, "post:PostHouseImages")
+	// http://localhost/api/v1.0/houses/7
+	beego.Router("/api/v1.0/houses/?:houseid", &controllers.HouseController{}, "get:GetDetailHouseData")
 }

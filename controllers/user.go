@@ -122,3 +122,109 @@ func (c *UserController) Postavatar() {
 	avatarMap["avatar_url"] = "http://192.168.2.110/" + fileid
 	resp["data"] = avatarMap
 }
+
+// GetUser  获取user信息
+func (c *UserController) GetUser() {
+	resp := make(map[string]interface{}, 6)
+	defer c.retData(&resp)
+	userid := c.GetSession("userid")
+	if userid == nil {
+		logs.Error("get session userid failed")
+		resp["errno"] = models.RECODE_SESSIONERR
+		resp["errmsg"] = models.RecodeText(models.RECODE_SESSIONERR)
+		return
+	}
+	user := models.User{
+		Id: userid.(int),
+	}
+	o := orm.NewOrm()
+	err := o.Read(&user)
+	if err != nil {
+		logs.Error("read user failed err = ", err)
+		resp["errno"] = models.RECODE_DBERR
+		resp["errmsg"] = models.RecodeText(models.RECODE_DBERR)
+		return
+	}
+	logs.Debug("read user sucess!!")
+	resp["errno"] = models.RECODE_OK
+	resp["errmsg"] = models.RecodeText(models.RECODE_OK)
+	resp["data"] = &user
+}
+
+// UpName 修改名字
+func (c *UserController) UpName() {
+	resp := make(map[string]interface{}, 6)
+	defer c.retData(&resp)
+	userid := c.GetSession("userid")
+	if userid == nil {
+		logs.Error("get session userid failed")
+		resp["errno"] = models.RECODE_SESSIONERR
+		resp["errmsg"] = models.RecodeText(models.RECODE_SESSIONERR)
+		return
+	}
+	username := make(map[string]string, 1)
+	err3 := json.Unmarshal(c.Ctx.Input.RequestBody, &username)
+	if err3 != nil {
+		logs.Error("获取要修改的name失败，err = ", err3)
+		resp["errno"] = models.RECODE_SERVERERR
+		resp["errmsg"] = models.RecodeText(models.RECODE_SERVERERR)
+		return
+	}
+	sql := `update user
+set name = ?
+where id = ?;`
+	o := orm.NewOrm()
+	logs.Debug("获取到的name = ", username["name"])
+	_, err2 := o.Raw(sql, username["name"], userid).Exec()
+	err := err2
+	if err != nil {
+		logs.Error("read user failed err = ", err)
+		resp["errno"] = models.RECODE_DBERR
+		resp["errmsg"] = models.RecodeText(models.RECODE_DBERR)
+		return
+	}
+	logs.Debug("read user sucess!!")
+	resp["errno"] = models.RECODE_OK
+	resp["errmsg"] = models.RecodeText(models.RECODE_OK)
+	resp["data"] = &username
+	c.SetSession("name", username["name"])
+}
+
+// PostAuth  实名制操作
+func (c *UserController) PostAuth() {
+	resp := make(map[string]interface{}, 6)
+	defer c.retData(&resp)
+	userid := c.GetSession("userid")
+	if userid == nil {
+		logs.Error("get session userid failed")
+		resp["errno"] = models.RECODE_SESSIONERR
+		resp["errmsg"] = models.RecodeText(models.RECODE_SESSIONERR)
+		return
+	}
+	username := make(map[string]string, 6)
+	err3 := json.Unmarshal(c.Ctx.Input.RequestBody, &username)
+	if err3 != nil {
+		logs.Error("获取要修改的name失败，err = ", err3)
+		resp["errno"] = models.RECODE_SERVERERR
+		resp["errmsg"] = models.RecodeText(models.RECODE_SERVERERR)
+		return
+	}
+	sql := `update user
+set real_name = ?,
+    id_card   = ?
+where id = ?;`
+	o := orm.NewOrm()
+	logs.Debug("获取到的实名制信息：%#v ", username)
+	// {real_name: "赵玉航", id_card: "19891130"}
+	_, err2 := o.Raw(sql, username["real_name"], username["id_card"], userid).Exec()
+	err := err2
+	if err != nil {
+		logs.Error("read user failed err = ", err)
+		resp["errno"] = models.RECODE_DBERR
+		resp["errmsg"] = models.RecodeText(models.RECODE_DBERR)
+		return
+	}
+	logs.Debug("update user sucess!!")
+	resp["errno"] = models.RECODE_OK
+	resp["errmsg"] = models.RecodeText(models.RECODE_OK)
+}
